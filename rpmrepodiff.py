@@ -6,6 +6,7 @@
 # Copyright (C) 2016, Lee H <lee@leeh.uk>
 # Released under the BSD 2-Clause License
 
+import argparse
 import collections
 import gzip
 import json
@@ -68,10 +69,13 @@ def rpmdiff_set(rpmdiff, name, mode, version):
 
 	rpmdiff[name][mode].append(version)
 
-#baseurl_src = 'http://repo.loc.lhsys.uk/upstream/centos/7/x86_64/updates/'
-#baseurl_dst = 'http://repo.loc.lhsys.uk/stable/centos/7/x86_64/updates/'
-baseurl_src = 'http://repo.loc.lhsys.uk/tmp/7.0-updates/'
-baseurl_dst = 'http://repo.loc.lhsys.uk/tmp/7.1-updates/'
+parser = argparse.ArgumentParser()
+parser.add_argument('-s', dest='source', nargs=1, required=True, help='Source Repo URL')
+parser.add_argument('-d', dest='dest', nargs=1, required=True, help='Dest Repo URL')
+args = parser.parse_args()
+
+baseurl_src = args.source[0]
+baseurl_dst = args.dest[0]
 
 repomdurl_src = baseurl_src + 'repodata/repomd.xml'
 repomdurl_dst = baseurl_dst + 'repodata/repomd.xml'
@@ -106,4 +110,3 @@ for name, versions in rpmdata_dst.items():
 			rpmdiff_set(rpmdiff, name, 'added', version)
 
 print json.dumps(rpmdiff)
-time.sleep(60)
