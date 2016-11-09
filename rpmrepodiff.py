@@ -9,6 +9,7 @@
 import argparse
 import collections
 import gzip
+import hashlib
 import json
 import re
 import StringIO
@@ -29,8 +30,7 @@ def parse_repomd(url):
 
 	return None
 
-def parse_primarymd(url):
-	rpmdata = {}
+def get_primarymd(url):
 	primarymdcontent = urlread(url)
 
 	# decompress if necessary
@@ -38,6 +38,12 @@ def parse_primarymd(url):
 		primarymdcontentgz = StringIO.StringIO(primarymdcontent)
 		with gzip.GzipFile(fileobj=primarymdcontentgz) as f:
 			primarymdcontent = f.read()
+
+	return primarymdcontent
+
+def parse_primarymd(url):
+	rpmdata = {}
+	primarymdcontent = get_primarymd(url)
 
 	xmldata = ET.fromstring(primarymdcontent)
 	for packagedata in xmldata.iter('{http://linux.duke.edu/metadata/common}package'):
@@ -72,6 +78,7 @@ def rpmdiff_set(rpmdiff, name, mode, version):
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', dest='source', nargs=1, required=True, help='Source Repo URL')
 parser.add_argument('-d', dest='dest', nargs=1, required=True, help='Dest Repo URL')
+parser.add_argument('-q', action='store_true', dest='quick', help='Quick mode.  Determines sync status but not differences')
 args = parser.parse_args()
 
 baseurl_src = args.source[0]
@@ -88,25 +95,34 @@ primarymd_dst = baseurl_dst + parse_repomd(repomdurl_dst)
 
 rpmdiff = {}
 
-rpmdata_src = parse_primarymd(primarymd_src)
-rpmdata_dst = parse_primarymd(primarymd_dst)
+if not args.quick:
+	rpmdata_src = parse_primarymd(primarymd_src)
+	rpmdata_dst = parse_primarymd(primarymd_dst)
 
-for name, versions in rpmdata_src.items():
-	if name in rpmdata_dst:
-		for version in versions:
-			if not version in rpmdata_dst[name]:
-				rpmdiff_set(rpmdiff, name, 'upgraded_src', version)
-		for version in rpmdata_dst[name]:
-			if not version in rpmdata_src[name]:
-				rpmdiff_set(rpmdiff, name, 'upgraded_dst', version)
-	# package was removed
+	for name, versions in rpmdata_src.items():
+		if name in rpmdata_dst:
+			for version in versions:
+				if not version in rpmdata_dst[name]:
+					rpmdiff_set(rpmdiff, name, 'upgraded_src', version)
+			for version in rpmdata_dst[name]:
+				if not version in rpmdata_src[name]:
+					rpmdiff_set(rpmdiff, name, 'upgraded_dst', version)
+		# package was removed
+		else:
+			for version in versions:
+				rpmdiff_set(rpmdiff, name, 'removed', version)
+
+	for name, versions in rpmdata_dst.items():
+		if not name in rpmdata_src:
+			for version in versions:
+				rpmdiff_set(rpmdiff, name, 'added', version)
+else:
+	sha_src = hashlib.sha256(get_primarymd(primarymd_src)).hexdigest()
+	sha_dst = hashlib.sha256(get_primarymd(primarymd_dst)).hexdigest()
+
+	if sha_src == sha_dst:
+		rpmdiff['synced'] = True
 	else:
-		for version in versions:
-			rpmdiff_set(rpmdiff, name, 'removed', version)
-
-for name, versions in rpmdata_dst.items():
-	if not name in rpmdata_src:
-		for version in versions:
-			rpmdiff_set(rpmdiff, name, 'added', version)
+		rpmdiff['synced'] = False
 
 print json.dumps(rpmdiff)
