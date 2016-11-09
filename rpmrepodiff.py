@@ -16,10 +16,14 @@ import StringIO
 import time
 import xml.etree.ElementTree as ET
 
-from urlgrabber import urlread
+import requests
 
 def parse_repomd(url):
-	xmldata = ET.fromstring(urlread(url))
+	r = requests.get(url)
+	if r.status_code != 200:
+		raise Exception('Error retrieving "' + url + '": Code ' + str(r.status_code))
+
+	xmldata = ET.fromstring(r.content)
 	for mdelem in xmldata.iter('{http://linux.duke.edu/metadata/repo}data'):
 		if mdelem.attrib['type'] != 'primary':
 			continue
@@ -31,8 +35,11 @@ def parse_repomd(url):
 	return None
 
 def get_primarymd(url):
-	primarymdcontent = urlread(url)
+	r = requests.get(url)
+	if r.status_code != 200:
+		raise Exception('Error retrieving "' + url + '": Code ' + str(r.status_code))
 
+	primarymdcontent = r.content
 	# decompress if necessary
 	if re.search('\.gz$', url):
 		primarymdcontentgz = StringIO.StringIO(primarymdcontent)
