@@ -3,6 +3,8 @@
 # rpmrepodiff.py
 #	Tool for diffing RPM repositories
 #
+# https://github.com/leehuk/rpmrepodiff/
+#
 # Copyright (C) 2016, Lee H <lee@leeh.uk>
 # Released under the BSD 2-Clause License
 
