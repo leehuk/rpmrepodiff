@@ -33,7 +33,7 @@ apt-get update && apt-get install python-requests
 ## Installation
 Install the requirements above, download it and run it.
 
-Preferably dont run it as root.A
+Preferably dont run it as root.
 
 ## Usage
 ```
@@ -57,23 +57,14 @@ as unsynced if the metadatas regenerated on a schedule even when the content has
 changed as the hashes will then likely be different.
 
 ## Output Format
-### Quick Mode
-rpmrepodiff will return a JSON assoc array with a single key 'synced', which has a boolean
-value indicating whether the repo is synced (true) or unsynced (false):
-
-#### Quick Mode Example
-```
-{"synced": false}
-```
-
 ### Full Mode (Default)
 rpmrepodiff will return a JSON assoc array with the keys set to the names of the packages
 that are different and the value being a nested assoc array.  The nested assoc arrays will
 have one of the following keys:
 
-* added - Indicates the given package exists in DEST but not SOURCE (exclusive)
-* removed - Indicates the given package exists in SOURCE but not DEST (
-* upgraded_src and upgraded_dst - Indicates the given package exists in both SOURCE and DEST, but at their respective different versions.
+* added - Indicates the given package exists in DEST but not SOURCE
+* removed - Indicates the given package exists in SOURCE but not DEST
+* upgraded_src and upgraded_dst - Indicates the given package exists in both SOURCE and DEST, but at their respective different versions
 
 The nested assoc arrays value is set to an array with a list of all the version numbers
 that have changed between the SOURCE and DEST.
@@ -104,4 +95,13 @@ The below example has been pretty-printed and will be outputted from rpmrepodiff
       ]
    }
 }
+```
+
+### Quick Mode
+rpmrepodiff will return a JSON assoc array with a single key 'synced', which has a boolean
+value indicating whether the repo is synced (true) or unsynced (false):
+
+#### Quick Mode Example
+```
+{"synced": false}
 ```
