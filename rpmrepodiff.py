@@ -25,9 +25,8 @@ def get_repomd(url):
 
 	return r.content
 
-def parse_repomd(url):
+def parse_repomd(repomdcontent):
 	repomddata = {}
-	repomdcontent = get_repomd(url)
 
 	xmldata = ET.fromstring(repomdcontent)
 	for mdelem in xmldata.iter('{http://linux.duke.edu/metadata/repo}data'):
@@ -51,9 +50,8 @@ def get_primarymd(url):
 
 	return primarymdcontent
 
-def parse_primarymd(url):
+def parse_primarymd(primarymdcontent):
 	rpmdata = {}
-	primarymdcontent = get_primarymd(url)
 
 	xmldata = ET.fromstring(primarymdcontent)
 	for packagedata in xmldata.iter('{http://linux.duke.edu/metadata/common}package'):
@@ -94,11 +92,20 @@ args = parser.parse_args()
 baseurl_src = args.source[0]
 baseurl_dst = args.dest[0]
 
-repomddata_src = parse_repomd(baseurl_src + 'repodata/repomd.xml')
-repomddata_dst = parse_repomd(baseurl_dst + 'repodata/repomd.xml')
+repomdurl_src = baseurl_src + 'repodata/repomd.xml'
+repomdurl_dst = baseurl_dst + 'repodata/repomd.xml'
 
-primarymd_src = baseurl_src + repomddata_src['primary']
-primarymd_dst = baseurl_dst + repomddata_dst['primary']
+repomd_src = get_repomd(repomdurl_src)
+repomd_dst = get_repomd(repomdurl_dst)
+
+repomddata_src = parse_repomd(repomd_src)
+repomddata_dst = parse_repomd(repomd_dst)
+
+primarymdurl_src = baseurl_src + repomddata_src['primary']
+primarymdurl_dst = baseurl_dst + repomddata_dst['primary']
+
+primarymd_src = get_primarymd(primarymdurl_src)
+primarymd_dst = get_primarymd(primarymdurl_dst)
 
 rpmdiff = {}
 
@@ -124,8 +131,8 @@ if not args.quick:
 			for version in versions:
 				rpmdiff_set(rpmdiff, name, 'added', version)
 else:
-	sha_src = hashlib.sha256(get_primarymd(primarymd_src)).hexdigest()
-	sha_dst = hashlib.sha256(get_primarymd(primarymd_dst)).hexdigest()
+	sha_src = hashlib.sha256(primarymd_src).hexdigest()
+	sha_dst = hashlib.sha256(primarymd_dst).hexdigest()
 
 	if sha_src == sha_dst:
 		rpmdiff['synced'] = True
