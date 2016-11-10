@@ -18,21 +18,24 @@ import xml.etree.ElementTree as ET
 
 import requests
 
-def parse_repomd(url):
+def get_repomd(url):
 	r = requests.get(url)
 	if r.status_code != 200:
 		raise Exception('Error retrieving "' + url + '": Code ' + str(r.status_code))
 
-	xmldata = ET.fromstring(r.content)
-	for mdelem in xmldata.iter('{http://linux.duke.edu/metadata/repo}data'):
-		if mdelem.attrib['type'] != 'primary':
-			continue
+	return r.content
 
+def parse_repomd(url):
+	repomddata = {}
+	repomdcontent = get_repomd(url)
+
+	xmldata = ET.fromstring(repomdcontent)
+	for mdelem in xmldata.iter('{http://linux.duke.edu/metadata/repo}data'):
 		for tag in mdelem:
 			if tag.tag == '{http://linux.duke.edu/metadata/repo}location':
-				return tag.attrib['href']
+				repomddata[mdelem.attrib['type']] = tag.attrib['href']
 
-	return None
+	return repomddata
 
 def get_primarymd(url):
 	r = requests.get(url)
@@ -91,14 +94,11 @@ args = parser.parse_args()
 baseurl_src = args.source[0]
 baseurl_dst = args.dest[0]
 
-repomdurl_src = baseurl_src + 'repodata/repomd.xml'
-repomdurl_dst = baseurl_dst + 'repodata/repomd.xml'
+repomddata_src = parse_repomd(baseurl_src + 'repodata/repomd.xml')
+repomddata_dst = parse_repomd(baseurl_dst + 'repodata/repomd.xml')
 
-primarymd_src_info = parse_repomd(repomdurl_src)
-primarymd_dst_info = parse_repomd(repomdurl_dst)
-
-primarymd_src = baseurl_src + parse_repomd(repomdurl_src)
-primarymd_dst = baseurl_dst + parse_repomd(repomdurl_dst)
+primarymd_src = baseurl_src + repomddata_src['primary']
+primarymd_dst = baseurl_dst + repomddata_dst['primary']
 
 rpmdiff = {}
 
