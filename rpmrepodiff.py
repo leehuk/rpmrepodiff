@@ -13,6 +13,7 @@ import hashlib
 import json
 import re
 import StringIO
+import sys
 import time
 import xml.etree.ElementTree as ET
 
@@ -21,7 +22,7 @@ import requests
 def get_repomd(url):
 	r = requests.get(url)
 	if r.status_code != 200:
-		raise Exception('Error retrieving "' + url + '": Code ' + str(r.status_code))
+		r.raise_for_status()
 
 	return r.content
 
@@ -95,23 +96,60 @@ baseurl_dst = args.dest[0]
 repomdurl_src = baseurl_src + 'repodata/repomd.xml'
 repomdurl_dst = baseurl_dst + 'repodata/repomd.xml'
 
-repomd_src = get_repomd(repomdurl_src)
-repomd_dst = get_repomd(repomdurl_dst)
+# Retrieve the repomd files
+try:
+	repomd_src = get_repomd(repomdurl_src)
+	repomd_dst = get_repomd(repomdurl_dst)
+except requests.exceptions.HTTPError as e:
+	print "Fatal Error:", e
+	sys.exit(1)
 
-repomddata_src = parse_repomd(repomd_src)
-repomddata_dst = parse_repomd(repomd_dst)
+# Parse our repomd files
+try:
+	repomddata_src = parse_repomd(repomd_src)
+except ET.ParseError as e:
+	print "Fatal Error: XML Parse Failure in", repomdurl_src + ":", e
+	sys.exit(1)
 
-primarymdurl_src = baseurl_src + repomddata_src['primary']
-primarymdurl_dst = baseurl_dst + repomddata_dst['primary']
+try:
+	repomddata_dst = parse_repomd(repomd_dst)
+except ET.ParseError as e:
+	print "Fatal Error: XML Parse Failure in", repomdurl_dst + ":", e
+	sys.exit(1)
 
-primarymd_src = get_primarymd(primarymdurl_src)
-primarymd_dst = get_primarymd(primarymdurl_dst)
+# Locate our primary metadata urls within the repomd data
+try:
+	primarymdurl_src = baseurl_src + repomddata_src['primary']
+except KeyError as e:
+	print "Fatal Error: Unable to locate primary metadata within:", repomdurl_src
+	sys.exit(1)
+
+try:
+	primarymdurl_dst = baseurl_dst + repomddata_dst['primary']
+except KeyError as e:
+	print "Fatal Error: Unable to locate primary metadata within:", repomdurl_dst
+	sys.exit(1)
+
+# Retrieve the primary metadata files
+try:
+	primarymd_src = get_primarymd(primarymdurl_src)
+	primarymd_dst = get_primarymd(primarymdurl_dst)
+except requests.exceptions.HTTPError as e:
+	print "Fatal Error:", e
+	sys.exit(1)
 
 rpmdiff = {}
 
 if not args.quick:
-	rpmdata_src = parse_primarymd(primarymd_src)
-	rpmdata_dst = parse_primarymd(primarymd_dst)
+	try:
+		rpmdata_src = parse_primarymd(primarymd_src)
+	except ET.ParseError as e:
+		print "Fatal Error: XML Parse Failure in", primarymdurl_src + ":", e
+
+	try:
+		rpmdata_dst = parse_primarymd(primarymd_dst)
+	except ET.ParseError as e:
+		print "Fatal Error: XML Parse Failure in", primarymdurl_dst + ":", e
 
 	for name, versions in rpmdata_src.items():
 		if name in rpmdata_dst:
