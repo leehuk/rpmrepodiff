@@ -100,7 +100,7 @@ repomdurl_dst = baseurl_dst + 'repodata/repomd.xml'
 try:
 	repomd_src = get_repomd(repomdurl_src)
 	repomd_dst = get_repomd(repomdurl_dst)
-except requests.exceptions.HTTPError as e:
+except (requests.exceptions.HTTPError, requests.exceptions.MissingSchema) as e:
 	print "Fatal Error:", e
 	sys.exit(1)
 
@@ -134,7 +134,7 @@ except KeyError as e:
 try:
 	primarymd_src = get_primarymd(primarymdurl_src)
 	primarymd_dst = get_primarymd(primarymdurl_dst)
-except requests.exceptions.HTTPError as e:
+except (requests.exceptions.HTTPError, requests.exceptions.MissingSchema) as e:
 	print "Fatal Error:", e
 	sys.exit(1)
 
