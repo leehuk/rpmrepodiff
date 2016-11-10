@@ -47,6 +47,10 @@ optional arguments:
   -q          Quick mode. Determines sync status but not differences
 ```
 
+The Repo URLs need to point to the folder which *contains* the 'repodata' folder.  If
+you're unsure, locate the repomd.xml file within the repodata folder, then strip the 
+'repodata/repomd.xml' from the URL before passing it to rpmrepodiff.
+
 ## Quick Mode
 In Quick Mode, rpmrepodiff will download the main XML metadata containing the list
 of RPMs, uncompresses it as necessary and then compares the sha256 hash of the
