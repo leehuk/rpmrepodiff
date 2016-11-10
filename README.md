@@ -37,14 +37,16 @@ Preferably dont run it as root.
 
 ## Usage
 ```
-[21:02 leeh@c7dev:~/rpmrepodiff]$ ./rpmrepodiff.py -h
-usage: rpmrepodiff.py [-h] -s SOURCE -d DEST [-q]
+[21:56 leeh@c7dev:~/rpmrepodiff]$ ./rpmrepodiff.py -h
+usage: rpmrepodiff.py [-h] -s SOURCE -d DEST [-b] [-q]
 
 optional arguments:
   -h, --help  show this help message and exit
-  -s SOURCE   Source Repo URL
-  -d DEST     Dest Repo URL
-  -q          Quick mode. Determines sync status but not differences
+  -s SOURCE   Source Repo URL.
+  -d DEST     Dest Repo URL.
+  -b          Brief mode. Output sync status only.
+  -q          Quick mode. Use hash comparisons to determine sync status.
+              Enables brief mode.
 ```
 
 The Repo URLs need to point to the folder which *contains* the 'repodata' folder.  If
@@ -62,9 +64,9 @@ changed as the hashes will then likely be different.
 
 ## Output Format
 ### Full Mode (Default)
-rpmrepodiff will return a JSON assoc array with the keys set to the names of the packages
-that are different and the value being a nested assoc array.  The nested assoc arrays will
-have one of the following keys:
+rpmrepodiff will return a JSON assoc array with the keys as the names of the packages
+that are different and the corresponding values being a nested assoc array.  The nested 
+assoc arrays will have one of the following keys:
 
 * added - Indicates the given package exists in DEST but not SOURCE
 * removed - Indicates the given package exists in SOURCE but not DEST
@@ -101,11 +103,11 @@ The below example has been pretty-printed and will be outputted from rpmrepodiff
 }
 ```
 
-### Quick Mode
+### Brief Mode
 rpmrepodiff will return a JSON assoc array with a single key 'synced', which has a boolean
 value indicating whether the repo is synced (true) or unsynced (false):
 
-#### Quick Mode Example
+#### Brief Mode Example
 ```
 {"synced": false}
 ```

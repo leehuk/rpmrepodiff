@@ -85,9 +85,10 @@ def rpmdiff_set(rpmdiff, name, mode, version):
 	rpmdiff[name][mode].append(version)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-s', dest='source', nargs=1, required=True, help='Source Repo URL')
-parser.add_argument('-d', dest='dest', nargs=1, required=True, help='Dest Repo URL')
-parser.add_argument('-q', action='store_true', dest='quick', help='Quick mode.  Determines sync status but not differences')
+parser.add_argument('-s', dest='source', nargs=1, required=True, help='Source Repo URL.')
+parser.add_argument('-d', dest='dest', nargs=1, required=True, help='Dest Repo URL.')
+parser.add_argument('-b', action='store_true', dest='brief', help='Brief mode.  Output sync status only.')
+parser.add_argument('-q', action='store_true', dest='quick', help='Quick mode.  Use hash comparisons to determine sync status.  Enables brief mode.')
 args = parser.parse_args()
 
 baseurl_src = args.source[0]
@@ -151,23 +152,55 @@ if not args.quick:
 	except ET.ParseError as e:
 		print "Fatal Error: XML Parse Failure in", primarymdurl_dst + ":", e
 
+	found_diff_brief = False
 	for name, versions in rpmdata_src.items():
+		if found_diff_brief:
+			break
+
 		if name in rpmdata_dst:
 			for version in versions:
 				if not version in rpmdata_dst[name]:
-					rpmdiff_set(rpmdiff, name, 'upgraded_src', version)
+					if args.brief:
+						rpmdiff['synced'] = False
+						found_diff_brief = True
+						break
+					else:
+						rpmdiff_set(rpmdiff, name, 'upgraded_src', version)
+
 			for version in rpmdata_dst[name]:
 				if not version in rpmdata_src[name]:
-					rpmdiff_set(rpmdiff, name, 'upgraded_dst', version)
+					if args.brief:
+						rpmdiff['synced'] = False
+						found_diff_brief = True
+						break
+					else:
+						rpmdiff_set(rpmdiff, name, 'upgraded_dst', version)
+
 		# package was removed
 		else:
 			for version in versions:
-				rpmdiff_set(rpmdiff, name, 'removed', version)
+				if args.brief:
+					rpmdiff['synced'] = False
+					found_diff_brief = True
+					break
+				else:
+					rpmdiff_set(rpmdiff, name, 'removed', version)
 
 	for name, versions in rpmdata_dst.items():
+		if found_diff_brief:
+			break
+
 		if not name in rpmdata_src:
 			for version in versions:
-				rpmdiff_set(rpmdiff, name, 'added', version)
+				if args.brief:
+					rpmdiff['synced'] = False
+					found_diff_brief = True
+					break
+				else:
+					rpmdiff_set(rpmdiff, name, 'added', version)
+
+	if args.brief and not found_diff_brief:
+		rpmdiff['synced'] = True
 else:
 	sha_src = hashlib.sha256(primarymd_src).hexdigest()
 	sha_dst = hashlib.sha256(primarymd_dst).hexdigest()
