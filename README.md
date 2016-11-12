@@ -129,3 +129,26 @@ value indicating whether the repo is synced (true) or unsynced (false):
 rpmrepodiff will return the data in human readable form rather than JSON.  For Brief Mode,
 this is basically either the word "Synced" or "Unsynced".  For Full Mode, this is a visual
 tree showing the relevant changes if any.
+
+#### Text Mode Example (Brief)
+```
+[15:59 leeh@c7dev:~/rpmrepodiff]$ ./rpmrepodiff.py -s http://repo.example.com/tmp/7.0-updates/ -d http://repo.example.com/tmp/7.1-updates/ -tbq
+Unsynced`
+```
+
+#### Text Mode Example (Full)
+````
+[16:00 leeh@c7dev:~/rpmrepodiff]$ ./rpmrepodiff.py -s http://repo.example.com/tmp/7.0-updates/ -d http://repo.example.com/tmp/7.1-updates/ -t
+iputils
+       Added              20121221-6.el7_1.1.x86_64
+
+kernel
+       Version Removed    3.10.0-123.13.1.el7.x86_64
+                          3.10.0-123.4.2.el7.x86_64
+       Version Added      3.10.0-229.1.2.el7.x86_64
+                          3.10.0-229.11.1.el7.x86_64
+
+rpm-devel
+       Removed            4.11.1-18.el7_0.i686
+                          4.11.1-18.el7_0.x86_64
+````
