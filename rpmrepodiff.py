@@ -8,6 +8,8 @@
 # Copyright (C) 2016, Lee H <lee@leeh.uk>
 # Released under the BSD 2-Clause License
 
+from __future__ import print_function
+
 import argparse
 import collections
 import gzip
@@ -104,33 +106,33 @@ try:
 	repomd_src = get_repomd(repomdurl_src)
 	repomd_dst = get_repomd(repomdurl_dst)
 except (requests.exceptions.HTTPError, requests.exceptions.MissingSchema) as e:
-	print "Fatal Error:", e
+	print("Fatal Error:", e, file=sys.stderr)
 	sys.exit(1)
 
 # Parse our repomd files
 try:
 	repomddata_src = parse_repomd(repomd_src)
 except ET.ParseError as e:
-	print "Fatal Error: XML Parse Failure in", repomdurl_src + ":", e
+	print("Fatal Error: XML Parse Failure in", repomdurl_src + ":", e)
 	sys.exit(1)
 
 try:
 	repomddata_dst = parse_repomd(repomd_dst)
 except ET.ParseError as e:
-	print "Fatal Error: XML Parse Failure in", repomdurl_dst + ":", e
+	print("Fatal Error: XML Parse Failure in", repomdurl_dst + ":", e)
 	sys.exit(1)
 
 # Locate our primary metadata urls within the repomd data
 try:
 	primarymdurl_src = baseurl_src + repomddata_src['primary']
 except KeyError as e:
-	print "Fatal Error: Unable to locate primary metadata within:", repomdurl_src
+	print("Fatal Error: Unable to locate primary metadata within:", repomdurl_src)
 	sys.exit(1)
 
 try:
 	primarymdurl_dst = baseurl_dst + repomddata_dst['primary']
 except KeyError as e:
-	print "Fatal Error: Unable to locate primary metadata within:", repomdurl_dst
+	print("Fatal Error: Unable to locate primary metadata within:", repomdurl_dst)
 	sys.exit(1)
 
 # Retrieve the primary metadata files
@@ -138,7 +140,7 @@ try:
 	primarymd_src = get_primarymd(primarymdurl_src)
 	primarymd_dst = get_primarymd(primarymdurl_dst)
 except (requests.exceptions.HTTPError, requests.exceptions.MissingSchema) as e:
-	print "Fatal Error:", e
+	print("Fatal Error:", e)
 	sys.exit(1)
 
 rpmdiff = {}
@@ -147,12 +149,12 @@ if not args.quick:
 	try:
 		rpmdata_src = parse_primarymd(primarymd_src)
 	except ET.ParseError as e:
-		print "Fatal Error: XML Parse Failure in", primarymdurl_src + ":", e
+		print("Fatal Error: XML Parse Failure in", primarymdurl_src + ":", e)
 
 	try:
 		rpmdata_dst = parse_primarymd(primarymd_dst)
 	except ET.ParseError as e:
-		print "Fatal Error: XML Parse Failure in", primarymdurl_dst + ":", e
+		print("Fatal Error: XML Parse Failure in", primarymdurl_dst + ":", e)
 
 	found_diff_brief = False
 	for name, versions in rpmdata_src.items():
@@ -212,4 +214,4 @@ else:
 	else:
 		rpmdiff['synced'] = False
 
-print json.dumps(rpmdiff)
+print(json.dumps(rpmdiff))
