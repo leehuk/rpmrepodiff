@@ -133,7 +133,7 @@ tree showing the relevant changes if any.
 #### Text Mode Example (Brief)
 ```
 [15:59 leeh@c7dev:~/rpmrepodiff]$ ./rpmrepodiff.py -s http://repo.example.com/tmp/7.0-updates/ -d http://repo.example.com/tmp/7.1-updates/ -tbq
-Unsynced`
+Unsynced
 ```
 
 #### Text Mode Example (Full)
