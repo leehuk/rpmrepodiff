@@ -14,9 +14,9 @@ import argparse
 import collections
 import gzip
 import hashlib
+import io
 import json
 import re
-import StringIO
 import sys
 import time
 import xml.etree.ElementTree as ET
@@ -49,7 +49,7 @@ def get_primarymd(url):
 	primarymdcontent = r.content
 	# decompress if necessary
 	if re.search('\.gz$', url):
-		primarymdcontentgz = StringIO.StringIO(primarymdcontent)
+		primarymdcontentgz = io.BytesIO(primarymdcontent)
 		with gzip.GzipFile(fileobj=primarymdcontentgz) as f:
 			primarymdcontent = f.read()
 
