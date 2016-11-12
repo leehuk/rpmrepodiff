@@ -93,7 +93,11 @@ parser.add_argument('-s', dest='source', nargs=1, required=True, help='Source Re
 parser.add_argument('-d', dest='dest', nargs=1, required=True, help='Dest Repo URL.')
 parser.add_argument('-b', action='store_true', dest='brief', help='Brief mode.  Output sync status only.')
 parser.add_argument('-q', action='store_true', dest='quick', help='Quick mode.  Use hash comparisons to determine sync status.  Enables brief mode.')
+parser.add_argument('-t', action='store_true', dest='text', help='Text mode.  Output results in human text form rather than JSON.')
 args = parser.parse_args()
+
+if args.quick:
+	args.brief = True
 
 baseurl_src = args.source[0]
 baseurl_dst = args.dest[0]
@@ -216,4 +220,36 @@ else:
 	else:
 		rpmdiff['synced'] = False
 
-print(json.dumps(rpmdiff))
+if args.text:
+	if not args.brief:
+		for name, data in sorted(rpmdiff.items()):
+			print(name)
+
+			if 'added' in data:
+				header = 'Added'
+				for version in sorted(data['added']):
+					print("       %-10s %s" % (header, version))
+					header = ''
+			elif 'removed' in data:
+				header = 'Removed'
+				for version in sorted(data['removed']):
+					print("       %-10s %s" % (header, version))
+					header = ''
+			# dealing with upgrades
+			else:
+				header = 'Upgraded'
+				for version in sorted(data['upgraded_src']):
+					print("       %-10s %s" % (header, version))
+					header = ''
+				for version in sorted(data['upgraded_dst']):
+					print("       %-10s      %s" % (header, version))
+					header = ''
+
+			print()
+	else:
+		if rpmdiff['synced']:
+			print("Synced")
+		else:
+			print("Unsynced")
+else:
+	print(json.dumps(rpmdiff))
