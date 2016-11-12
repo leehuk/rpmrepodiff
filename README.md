@@ -69,29 +69,35 @@ changed as the hashes will then likely be different.
 
 ## Output Format
 ### Full Mode (Default)
-rpmrepodiff will return a JSON assoc array with the keys as the names of the packages
-that are different and the corresponding values being a nested assoc array.  The nested 
-assoc arrays will have one of the following keys:
+rpmrepodiff will return a JSON assoc array '{key: value}' with parameters:
 
-* added - Indicates the given package exists in DEST but not SOURCE
-* removed - Indicates the given package exists in SOURCE but not DEST
-* upgraded_src and upgraded_dst - Indicates the given package exists in both SOURCE and DEST, but at their respective different versions
+* key - The name of the package.
+* value - A nested JSON assoc array.
 
-The nested assoc arrays value is set to an array with a list of all the version numbers
-that have changed between the SOURCE and DEST.
+The nested JSON assoc array '{nestkey: nestvalue}' has parameters:
 
-If there are no differences between the repos, rpmrepodiff returns an empty JSON assoc array.
+* nestkey - One of the following items:
+  * added - Indicates the given package exists in DEST but not SOURCE
+  * removed - Indicates the given package exists in SOURCE but not DEST
+  * version_added - Indicates the given package exists in both SOURCE and DEST, but has
+    versions that only exist in DEST.
+  * version_removed - Indicates the given package exists in both SOURCE and DEST, but has
+    versions that only exist in SOURCE.
+* nestvalue - An array '[]' containing a list of all the version numbers that have changed
+  between SOURCE and DEST.
+
+If there are no differences between the repos, rpmrepodiff returns an empty JSON assoc array '{}'.
 
 #### Full Mode Example
 The below example has been pretty-printed and will be outputted from rpmrepodiff as a single line:
 ```
 {
    "kernel":{
-      "upgraded_dst":[
+      "version_added":[
          "3.10.0-229.1.2.el7.x86_64",
          "3.10.0-229.11.1.el7.x86_64"
       ],
-      "upgraded_src":[
+      "version_removed":[
          "3.10.0-123.13.1.el7.x86_64",
          "3.10.0-123.4.2.el7.x86_64"
       ]

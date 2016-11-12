@@ -175,7 +175,7 @@ if not args.quick:
 						found_diff_brief = True
 						break
 					else:
-						rpmdiff_set(rpmdiff, name, 'upgraded_src', version)
+						rpmdiff_set(rpmdiff, name, 'version_removed', version)
 
 			for version in rpmdata_dst[name]:
 				if not version in rpmdata_src[name]:
@@ -184,7 +184,7 @@ if not args.quick:
 						found_diff_brief = True
 						break
 					else:
-						rpmdiff_set(rpmdiff, name, 'upgraded_dst', version)
+						rpmdiff_set(rpmdiff, name, 'version_added', version)
 
 		# package was removed
 		else:
@@ -228,21 +228,25 @@ if args.text:
 			if 'added' in data:
 				header = 'Added'
 				for version in sorted(data['added']):
-					print("       %-10s %s" % (header, version))
+					print("       %-18s %s" % (header, version))
 					header = ''
-			elif 'removed' in data:
+
+			if 'removed' in data:
 				header = 'Removed'
 				for version in sorted(data['removed']):
-					print("       %-10s %s" % (header, version))
+					print("       %-18s %s" % (header, version))
 					header = ''
-			# dealing with upgrades
-			else:
-				header = 'Upgraded'
-				for version in sorted(data['upgraded_src']):
-					print("       %-10s %s" % (header, version))
+
+			if 'version_removed' in data:
+				header = 'Version Removed'
+				for version in sorted(data['version_removed']):
+					print("       %-18s %s" % (header, version))
 					header = ''
-				for version in sorted(data['upgraded_dst']):
-					print("       %-10s      %s" % (header, version))
+
+			if 'version_added' in data:
+				header = 'Version Added'
+				for version in sorted(data['version_added']):
+					print("       %-18s %s" % (header, version))
 					header = ''
 
 			print()
