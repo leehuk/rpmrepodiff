@@ -53,6 +53,10 @@ The Repo URLs need to point to the folder which *contains* the 'repodata' folder
 you're unsure, locate the repomd.xml file within the repodata folder, then strip the 
 'repodata/repomd.xml' from the URL before passing it to rpmrepodiff.
 
+## Errors
+rpmrepodiff will exit with a non-zero return value if it encounters an error and will
+print an appropriate message to stderr, generally with no data sent to stdout.
+
 ## Quick Mode
 In Quick Mode, rpmrepodiff will download the main XML metadata containing the list
 of RPMs, uncompresses it as necessary and then compares the sha256 hash of the
@@ -74,6 +78,8 @@ assoc arrays will have one of the following keys:
 
 The nested assoc arrays value is set to an array with a list of all the version numbers
 that have changed between the SOURCE and DEST.
+
+If there are no differences between the repos, rpmrepodiff returns an empty JSON assoc array.
 
 #### Full Mode Example
 The below example has been pretty-printed and will be outputted from rpmrepodiff as a single line:
