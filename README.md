@@ -47,6 +47,7 @@ optional arguments:
   -b          Brief mode. Output sync status only.
   -q          Quick mode. Use hash comparisons to determine sync status.
               Enables brief mode.
+  -t          Text mode. Output results in human text form rather than JSON.
 ```
 
 The Repo URLs need to point to the folder which *contains* the 'repodata' folder.  If
@@ -117,3 +118,8 @@ value indicating whether the repo is synced (true) or unsynced (false):
 ```
 {"synced": false}
 ```
+
+### Text Mode
+rpmrepodiff will return the data in human readable form rather than JSON.  For Brief Mode,
+this is basically either the word "Synced" or "Unsynced".  For Full Mode, this is a visual
+tree showing the relevant changes if any.
