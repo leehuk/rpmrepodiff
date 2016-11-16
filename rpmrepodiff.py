@@ -220,17 +220,16 @@ except ET.ParseError as e:
 	print("Fatal Error: XML Parse Failure in", primarymdurl_dst + ":", e, file=sys.stderr)
 	sys.exit(1)
 
-found_diff_brief = False
-for name, versions in rpmdata_src.items():
-	if found_diff_brief:
-		break
+# default synced status to True
+if args.brief:
+	rpmdiff['synced'] = True
 
+for name, versions in rpmdata_src.items():
 	if name in rpmdata_dst:
 		for version in versions:
 			if not version in rpmdata_dst[name]:
 				if args.brief:
 					rpmdiff['synced'] = False
-					found_diff_brief = True
 					break
 				else:
 					rpmdiff_set(rpmdiff, name, 'version_removed', version)
@@ -239,7 +238,6 @@ for name, versions in rpmdata_src.items():
 			if not version in rpmdata_src[name]:
 				if args.brief:
 					rpmdiff['synced'] = False
-					found_diff_brief = True
 					break
 				else:
 					rpmdiff_set(rpmdiff, name, 'version_added', version)
@@ -249,25 +247,18 @@ for name, versions in rpmdata_src.items():
 		for version in versions:
 			if args.brief:
 				rpmdiff['synced'] = False
-				found_diff_brief = True
 				break
 			else:
 				rpmdiff_set(rpmdiff, name, 'removed', version)
 
 for name, versions in rpmdata_dst.items():
-	if found_diff_brief:
-		break
-
 	if not name in rpmdata_src:
 		for version in versions:
 			if args.brief:
 				rpmdiff['synced'] = False
-				found_diff_brief = True
 				break
 			else:
 				rpmdiff_set(rpmdiff, name, 'added', version)
 
-if args.brief and not found_diff_brief:
-	rpmdiff['synced'] = True
 
 rpmdiff_output(args, rpmdiff)
