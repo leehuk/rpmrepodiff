@@ -133,7 +133,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-s', dest='source', nargs=1, required=True, help='Source Repo URL.')
 parser.add_argument('-d', dest='dest', nargs=1, required=True, help='Dest Repo URL.')
 parser.add_argument('-b', action='store_true', dest='brief', help='Brief mode.  Output sync status only.')
-parser.add_argument('-q', action='store_true', dest='quick', help='Quick mode.  Skip the XML parsing stage and only analyse the sha hashes.  Enables brief mode.')
+parser.add_argument('-q', action='store_true', dest='quick', help='Quick mode.  Skip the XML parsing stage and only analyse the sha hashes.  May return incorrect results.  Enables brief mode.')
 parser.add_argument('-t', action='store_true', dest='text', help='Text mode.  Output results in human text form rather than JSON.')
 args = parser.parse_args()
 

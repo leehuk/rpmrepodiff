@@ -48,7 +48,7 @@ optional arguments:
   -d DEST     Dest Repo URL.
   -b          Brief mode. Output sync status only.
   -q          Quick mode. Skip the XML parsing stage and only analyse the sha
-              hashes. Enables brief mode.
+              hashes. May return incorrect results. Enables brief mode.
   -t          Text mode. Output results in human text form rather than JSON.
 ```
 
