@@ -6,7 +6,7 @@ http(s).
 rpmrepodiff locates the primary XML metadata within the repositories and runs sha
 hash comparisons on them to determine if they are identical.  If not, it will parse
 the metadata into associative arrays and determine the exact set of differences
-between the two repositories -- returning the results as JSON.
+between the two repositories -- returning the results as JSON or human readable text.
 
 ## Requirements
 rpmrepodiff requires:
