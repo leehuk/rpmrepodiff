@@ -88,6 +88,49 @@ def rpmdiff_set(rpmdiff, name, mode, version):
 
 	rpmdiff[name][mode].append(version)
 
+def rpmdiff_output(args, rpmdiff):
+	if args.text:
+		if args.brief:
+			if rpmdiff['synced']:
+				print("Synced")
+			else:
+				print("Unsynced")
+
+		else:
+			for name, data in sorted(rpmdiff.items()):
+				print(name)
+
+				if 'added' in data:
+					header = 'Added'
+					for version in sorted(data['added']):
+						print("       %-18s %s" % (header, version))
+						header = ''
+
+				if 'removed' in data:
+					header = 'Removed'
+					for version in sorted(data['removed']):
+						print("       %-18s %s" % (header, version))
+						header = ''
+
+				if 'version_removed' in data:
+					header = 'Version Removed'
+					for version in sorted(data['version_removed']):
+						print("       %-18s %s" % (header, version))
+						header = ''
+
+				if 'version_added' in data:
+					header = 'Version Added'
+					for version in sorted(data['version_added']):
+						print("       %-18s %s" % (header, version))
+						header = ''
+
+				print()
+
+	else:
+		print(json.dumps(rpmdiff))
+
+	sys.exit(0)
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', dest='source', nargs=1, required=True, help='Source Repo URL.')
 parser.add_argument('-d', dest='dest', nargs=1, required=True, help='Dest Repo URL.')
@@ -220,40 +263,4 @@ else:
 	else:
 		rpmdiff['synced'] = False
 
-if args.text:
-	if not args.brief:
-		for name, data in sorted(rpmdiff.items()):
-			print(name)
-
-			if 'added' in data:
-				header = 'Added'
-				for version in sorted(data['added']):
-					print("       %-18s %s" % (header, version))
-					header = ''
-
-			if 'removed' in data:
-				header = 'Removed'
-				for version in sorted(data['removed']):
-					print("       %-18s %s" % (header, version))
-					header = ''
-
-			if 'version_removed' in data:
-				header = 'Version Removed'
-				for version in sorted(data['version_removed']):
-					print("       %-18s %s" % (header, version))
-					header = ''
-
-			if 'version_added' in data:
-				header = 'Version Added'
-				for version in sorted(data['version_added']):
-					print("       %-18s %s" % (header, version))
-					header = ''
-
-			print()
-	else:
-		if rpmdiff['synced']:
-			print("Synced")
-		else:
-			print("Unsynced")
-else:
-	print(json.dumps(rpmdiff))
+rpmdiff_output(args, rpmdiff)
