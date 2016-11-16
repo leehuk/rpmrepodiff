@@ -3,8 +3,10 @@
 rpmrepodiff will determine the differences between two repositories published via
 http(s).
 
-rpmrepodiff parses the XML metadata within the repositories into associative arrays
-and then determines the differences between them, returning the results as JSON.
+rpmrepodiff locates the primary XML metadata within the repositories and runs sha
+hash comparisons on them to determine if they are identical.  If not, it will parse
+the metadata into associative arrays and determine the exact set of differences
+between the two repositories -- returning the results as JSON.
 
 ## Requirements
 rpmrepodiff requires:
@@ -37,16 +39,16 @@ Preferably dont run it as root.
 
 ## Usage
 ```
-[21:56 leeh@c7dev:~/rpmrepodiff]$ ./rpmrepodiff.py -h
-usage: rpmrepodiff.py [-h] -s SOURCE -d DEST [-b] [-q]
+[16:43 leeh@initium:~/rpmrepodiff]# ./rpmrepodiff.py -h
+usage: rpmrepodiff.py [-h] -s SOURCE -d DEST [-b] [-q] [-t]
 
 optional arguments:
   -h, --help  show this help message and exit
   -s SOURCE   Source Repo URL.
   -d DEST     Dest Repo URL.
   -b          Brief mode. Output sync status only.
-  -q          Quick mode. Use hash comparisons to determine sync status.
-              Enables brief mode.
+  -q          Quick mode. Skip the XML parsing stage and only analyse the sha
+              hashes. Enables brief mode.
   -t          Text mode. Output results in human text form rather than JSON.
 ```
 
@@ -59,13 +61,10 @@ rpmrepodiff will exit with a non-zero return value if it encounters an error and
 print an appropriate message to stderr, generally with no data sent to stdout.
 
 ## Quick Mode
-In Quick Mode, rpmrepodiff will download the main XML metadata containing the list
-of RPMs, uncompresses it as necessary and then compares the sha256 hash of the
-metadata, rather than parsing and doing a nested comparison.
-
-It is generally accurate and a lot faster for large repos, but may report the repos
-as unsynced if the metadatas regenerated on a schedule even when the content hasnt 
-changed as the hashes will then likely be different.
+In Quick Mode, rpmrepodiff will stop after the sha hash comparisons of the metadata and
+wont do nested comparisons.  It is a lot quicker for large repositories, but not generally
+recommended because some repositories regenerate their metadata on a nightly basis,
+leading to different sha hashes even when the actual content is identical.
 
 ## Output Format
 ### Full Mode (Default)

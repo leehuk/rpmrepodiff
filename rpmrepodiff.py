@@ -129,13 +129,11 @@ def rpmdiff_output(args, rpmdiff):
 	else:
 		print(json.dumps(rpmdiff))
 
-	sys.exit(0)
-
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', dest='source', nargs=1, required=True, help='Source Repo URL.')
 parser.add_argument('-d', dest='dest', nargs=1, required=True, help='Dest Repo URL.')
 parser.add_argument('-b', action='store_true', dest='brief', help='Brief mode.  Output sync status only.')
-parser.add_argument('-q', action='store_true', dest='quick', help='Quick mode.  Use hash comparisons to determine sync status.  Enables brief mode.')
+parser.add_argument('-q', action='store_true', dest='quick', help='Quick mode.  Skip the XML parsing stage and only analyse the sha hashes.  Enables brief mode.')
 parser.add_argument('-t', action='store_true', dest='text', help='Text mode.  Output results in human text form rather than JSON.')
 args = parser.parse_args()
 
@@ -192,75 +190,84 @@ except (requests.exceptions.HTTPError, requests.exceptions.MissingSchema) as e:
 
 rpmdiff = {}
 
-if not args.quick:
-	try:
-		rpmdata_src = parse_primarymd(primarymd_src)
-	except ET.ParseError as e:
-		print("Fatal Error: XML Parse Failure in", primarymdurl_src + ":", e, file=sys.stderr)
-		sys.exit(1)
+sha_src = hashlib.sha256(primarymd_src).hexdigest()
+sha_dst = hashlib.sha256(primarymd_dst).hexdigest()
 
-	try:
-		rpmdata_dst = parse_primarymd(primarymd_dst)
-	except ET.ParseError as e:
-		print("Fatal Error: XML Parse Failure in", primarymdurl_dst + ":", e, file=sys.stderr)
-		sys.exit(1)
+# shortcut when the hashes are equal
+if sha_src == sha_dst:
+	# output 'synced' status in brief mode, or an empty json array if not
+	if args.brief:
+		rpmdiff['synced'] = True
 
-	found_diff_brief = False
-	for name, versions in rpmdata_src.items():
-		if found_diff_brief:
-			break
+	rpmdiff_output(args, rpmdiff)
+	sys.exit(0)
 
-		if name in rpmdata_dst:
-			for version in versions:
-				if not version in rpmdata_dst[name]:
-					if args.brief:
-						rpmdiff['synced'] = False
-						found_diff_brief = True
-						break
-					else:
-						rpmdiff_set(rpmdiff, name, 'version_removed', version)
+# in quick mode we dont do a nested comparison
+if args.quick:
+	rpmdiff['synced'] = False
+	rpmdiff_output(args, rpmdiff)
+	sys.exit(0)
 
-			for version in rpmdata_dst[name]:
-				if not version in rpmdata_src[name]:
-					if args.brief:
-						rpmdiff['synced'] = False
-						found_diff_brief = True
-						break
-					else:
-						rpmdiff_set(rpmdiff, name, 'version_added', version)
+try:
+	rpmdata_src = parse_primarymd(primarymd_src)
+except ET.ParseError as e:
+	print("Fatal Error: XML Parse Failure in", primarymdurl_src + ":", e, file=sys.stderr)
+	sys.exit(1)
 
-		# package was removed
-		else:
-			for version in versions:
+try:
+	rpmdata_dst = parse_primarymd(primarymd_dst)
+except ET.ParseError as e:
+	print("Fatal Error: XML Parse Failure in", primarymdurl_dst + ":", e, file=sys.stderr)
+	sys.exit(1)
+
+found_diff_brief = False
+for name, versions in rpmdata_src.items():
+	if found_diff_brief:
+		break
+
+	if name in rpmdata_dst:
+		for version in versions:
+			if not version in rpmdata_dst[name]:
 				if args.brief:
 					rpmdiff['synced'] = False
 					found_diff_brief = True
 					break
 				else:
-					rpmdiff_set(rpmdiff, name, 'removed', version)
+					rpmdiff_set(rpmdiff, name, 'version_removed', version)
 
-	for name, versions in rpmdata_dst.items():
-		if found_diff_brief:
-			break
-
-		if not name in rpmdata_src:
-			for version in versions:
+		for version in rpmdata_dst[name]:
+			if not version in rpmdata_src[name]:
 				if args.brief:
 					rpmdiff['synced'] = False
 					found_diff_brief = True
 					break
 				else:
-					rpmdiff_set(rpmdiff, name, 'added', version)
+					rpmdiff_set(rpmdiff, name, 'version_added', version)
 
-	if args.brief and not found_diff_brief:
-		rpmdiff['synced'] = True
-else:
-	sha_src = hashlib.sha256(primarymd_src).hexdigest()
-	sha_dst = hashlib.sha256(primarymd_dst).hexdigest()
-
-	if sha_src == sha_dst:
-		rpmdiff['synced'] = True
+	# package was removed
 	else:
-		rpmdiff['synced'] = False
+		for version in versions:
+			if args.brief:
+				rpmdiff['synced'] = False
+				found_diff_brief = True
+				break
+			else:
+				rpmdiff_set(rpmdiff, name, 'removed', version)
+
+for name, versions in rpmdata_dst.items():
+	if found_diff_brief:
+		break
+
+	if not name in rpmdata_src:
+		for version in versions:
+			if args.brief:
+				rpmdiff['synced'] = False
+				found_diff_brief = True
+				break
+			else:
+				rpmdiff_set(rpmdiff, name, 'added', version)
+
+if args.brief and not found_diff_brief:
+	rpmdiff['synced'] = True
 
 rpmdiff_output(args, rpmdiff)
